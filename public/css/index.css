@@ -13,40 +13,40 @@ body {
 }
 
 .container {
-    position: relative; /* Permite que el canvas se coloque sobre el video */
+    position: relative; 
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
 video {
-    width: 720px; /* Tamaño específico para el video */
-    height: 560px; /* Tamaño específico para el video */
+    width: 720px; 
+    height: 560px; 
     border: 1px solid #ccc;
-    z-index: 1; /* Video debajo del canvas */
-    object-fit: cover; /* Hace que el video se ajuste correctamente al tamaño sin distorsionarse */
+    z-index: 1; 
+    object-fit: cover; 
 }
 
 canvas {
-    position: absolute; /* Se coloca encima del video */
+    position: absolute; 
     top: 0;
     left: 0;
-    width: 720px; /* Asegura que tenga el mismo tamaño que el video */
-    height: 560px; /* Asegura que tenga el mismo tamaño que el video */
-    z-index: 2; /* Canvas sobre el video */
+    width: 720px; 
+    height: 560px; 
+    z-index: 2; 
 }
 
 .buttons {
-    margin-top: 20px; /* Espacio entre el video/canvas y los botones */
+    margin-top: 20px; 
     display: flex;
-    gap: 10px; /* Espacio entre los botones */
+    gap: 10px; 
 }
 
 button {
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
-    background-color: #4CAF50; /* Fondo verde */
+    background-color: #4CAF50; 
     color: white;
     border: none;
     border-radius: 5px;
@@ -54,6 +54,6 @@ button {
 }
 
 button:hover {
-    background-color: #45a049; /* Cambio de color al pasar el ratón */
+    background-color: #45a049; 
 }
 
