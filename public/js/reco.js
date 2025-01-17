@@ -1,9 +1,7 @@
 const video = document.getElementById('inputVideo');
-const canvas = document.getElementById('overlay');
-let registeredDescriptor = null; // Aquí se guarda el vector del analisis de momento
+let registeredDescriptor = null;
 
 (async () => {
-    // Esto es para cargar la camara, pedir el permiso y cargar los modelos entrenados de la libreria 
     const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
     video.srcObject = stream;
 
@@ -13,7 +11,6 @@ let registeredDescriptor = null; // Aquí se guarda el vector del analisis de mo
     await faceapi.loadFaceRecognitionModel(MODEL_URL);
 })();
 
-// Esta funcion registra la cara por primera vez y llama a la libreria para hacer el analisis
 async function registerFace() {
     const detection = await faceapi.detectSingleFace(video)
         .withFaceLandmarks()
@@ -25,32 +22,80 @@ async function registerFace() {
     }
 
     registeredDescriptor = detection.descriptor;
-    //Acá se puede llamar al servicio de la db y guardar el vector del descriptor en JSON relacionandolo con un user 
-
     alert('Cara registrada exitosamente.');
 }
 
-// Esta funcion verifica la cara que está registrada con la que se muestra en la camara
 async function verifyFace() {
     if (!registeredDescriptor) {
         alert('Primero registra una cara.');
         return;
     }
-    //Acá se puede llamar al servicio de la db y traer el vector del descriptor que está en la db asociado a un user
-    const currentFace = await faceapi.detectSingleFace(video)
-        .withFaceLandmarks()
-        .withFaceDescriptor();
 
-    if (!currentFace) {
-        alert('No se detectó una cara en el video.');
-        return;
+    const captures = [];
+    for (let i = 0; i < 3; i++) {
+        const currentFace = await faceapi.detectSingleFace(video)
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (currentFace) {
+            captures.push(currentFace);
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+            alert('No se detectó una cara en el video.');
+            return;
+        }
     }
 
-    // Aquí hace la comparacion de las 2 caras
-    const distance = faceapi.euclideanDistance(registeredDescriptor, currentFace.descriptor);
-    const threshold = 0.6; // Aquí se ajusta segun las necesidades y la seguridad
-    alert(distance < threshold ? 'Es la misma persona.' : 'No es la misma persona.');
+    let faceVerified = false;
+    let texturesDetected = 0;
+
+    for (const face of captures) {
+        const distance = faceapi.euclideanDistance(registeredDescriptor, face.descriptor);
+        const threshold = 0.6;
+
+        if (distance < threshold) {
+            faceVerified = true;
+        }
+
+        const imgData = await getImageDataFromVideo(video);
+        const texture = calculateTexture(imgData);
+
+        if (texture > 50) {
+            texturesDetected++;
+        }
+    }
+
+    if (faceVerified && texturesDetected >= 2) {
+        alert('Acceso permitido.');
+    } else {
+        alert('Acceso denegado.');
+    }
+}
+
+function calculateTexture(imageData) {
+    let totalTexture = 0;
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        const r = imageData.data[i];
+        const g = imageData.data[i + 1];
+        const b = imageData.data[i + 2];    
+        totalTexture += Math.abs(r - g) + Math.abs(g - b) + Math.abs(b - r);
+    }
+    return totalTexture / (imageData.data.length / 4);
+}
+
+function getImageDataFromVideo(video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return context.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 document.getElementById('registerButton').addEventListener('click', registerFace);
 document.getElementById('verifyButton').addEventListener('click', verifyFace);
+
+
+
+
+
